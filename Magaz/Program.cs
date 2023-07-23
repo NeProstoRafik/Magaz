@@ -9,7 +9,7 @@ namespace Magaz
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            //добавление сессии
+            //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddSession(op =>
             {
@@ -18,14 +18,17 @@ namespace Magaz
                 op.Cookie.IsEssential = true;
             });
 
-           // Add services to the container.
-           builder.Services.AddControllersWithViews();
+            // Add services to the container.
+            builder.Services.AddControllersWithViews();
 
 
             builder.Services.AddDbContext<Context>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+
+            builder.Services.AddDefaultIdentity<Microsoft.AspNetCore.Identity.IdentityUser>()
+                .AddEntityFrameworkStores<Context>();      //пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ UI пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
             var app = builder.Build();
 
@@ -41,15 +44,22 @@ namespace Magaz
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
-            app.UseSession(); // подлючаем мидлварю сессий
-            app.MapControllerRoute(
-               
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+            app.UseSession(); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+                              //app.MapControllerRoute(
 
+            //    name: "default",
+            //    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            app.UseEndpoints(endpoints =>
+            {
+            endpoints.MapRazorPages();
+            endpoints.MapControllerRoute(
+                 name: "default",
+            pattern: "{controller=Home}/{action=Index}/{id?}");
+            });
             app.Run();
         }
-    }
+}
 }
