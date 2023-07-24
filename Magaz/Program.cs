@@ -1,5 +1,7 @@
 using Magaz.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace Magaz
 {
@@ -7,9 +9,10 @@ namespace Magaz
     {
         public static void Main(string[] args)
         {
+            
             var builder = WebApplication.CreateBuilder(args);
 
-            //���������� ������
+            //для сессии
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddSession(op =>
             {
@@ -27,8 +30,9 @@ namespace Magaz
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
 
-            builder.Services.AddDefaultIdentity<Microsoft.AspNetCore.Identity.IdentityUser>()
-                .AddEntityFrameworkStores<Context>();      //����� ��������� UI �� ����� ������
+            builder.Services.AddIdentity<Microsoft.AspNetCore.Identity.IdentityUser, IdentityRole>()
+                .AddDefaultTokenProviders().AddDefaultUI()   //токен и юай
+                .AddEntityFrameworkStores<Context>();      //нужно установить UI из нугет пакета
 
             var app = builder.Build();
 
@@ -46,15 +50,16 @@ namespace Magaz
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseSession(); // ��������� �������� �����
-                              //app.MapControllerRoute(
+            app.UseSession(); // мидлваря сессии
+                             
+            //app.MapControllerRoute(
 
             //    name: "default",
             //    pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.UseEndpoints(endpoints =>
             {
-            endpoints.MapRazorPages();
+            endpoints.MapRazorPages(); //добавили рейзер страницы для индификации
             endpoints.MapControllerRoute(
                  name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}");
