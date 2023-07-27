@@ -1,6 +1,9 @@
 using Magaz.Data;
+using Magaz.Utility;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Text;
 
 namespace Magaz
@@ -12,6 +15,7 @@ namespace Magaz
             
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddTransient<IEmailSender, EmailSender>();
             //для сессии
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddSession(op =>
