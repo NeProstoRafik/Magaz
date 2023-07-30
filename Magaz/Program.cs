@@ -1,4 +1,4 @@
-using Magaz.Data;
+using Magaz.DAL.Data;
 using Magaz.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;

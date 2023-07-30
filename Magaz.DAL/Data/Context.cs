@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 
-namespace Magaz.Data
+namespace Magaz.DAL.Data
 {
     public class Context : IdentityDbContext
     {

@@ -1,10 +1,12 @@
-﻿using Magaz.Data;
+﻿using Magaz.DAL.Data;
 using Magaz.Models;
 using Magaz.Models.ViewModels;
 using Magaz.Utility;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text;
 
 namespace Magaz.Controllers
 {
@@ -12,11 +14,15 @@ namespace Magaz.Controllers
     public class CartController : Controller
     {
         private readonly Context _db;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IEmailSender _emailSender;
         [BindProperty] // чтобы не узакзывать в методах
         public ProductUserVM ProductUserVM { get; set; }
-        public CartController(Context db)
+        public CartController(Context db, IWebHostEnvironment webHostEnvironment, IEmailSender emailSender)
         {
             _db = db;
+            _webHostEnvironment = webHostEnvironment;
+            _emailSender = emailSender;
         }
 
         public IActionResult Index()
@@ -57,9 +63,10 @@ namespace Magaz.Controllers
             {
               // ApplicationUser = _db.ApplicationUsers.FirstOrDefault(u => u.UserName == userId),
                ApplicationUser =_db.ApplicationUsers.FirstOrDefault(u=>u.Id==claim.Value),
-                    ProductList= prodList,
+                    ProductList= prodList.ToList(),
                     
             };
+           
             return View(ProductUserVM);
         }
 
@@ -67,8 +74,29 @@ namespace Magaz.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Summary")]
-        public IActionResult SummaryPost(ProductUserVM productUserVM)
+        public async Task<IActionResult> SummaryPost(ProductUserVM productUserVM)
         {
+            var pathToTeamplate= _webHostEnvironment.WebRootPath + Path.DirectorySeparatorChar.ToString()+
+              "Templates" + Path.DirectorySeparatorChar.ToString() + "Inquiry.html";
+            var subject = "New Inquiry";
+            var htmlBody = "";
+            using (StreamReader sr=System.IO.File.OpenText(pathToTeamplate))
+            {
+                htmlBody=sr.ReadToEnd();
+            }
+
+            StringBuilder productListSB= new StringBuilder();
+            foreach (var item in productUserVM.ProductList)
+            {
+                productListSB.Append($" - Name: {item.Name} <span style='font-size:14px;'> (ID: {item.Id})</span><br />");
+            }
+            string messageBody = string.Format(htmlBody,
+                 ProductUserVM.ApplicationUser.UserName,
+                ProductUserVM.ApplicationUser.Email,
+                ProductUserVM.ApplicationUser.PhoneNumber,
+                productListSB.ToString());
+
+            await _emailSender.SendEmailAsync( WC.AdminEmail, subject, messageBody); // отправляем сообщение
 
             return RedirectToAction(nameof(InquiryConfirmation));
         }

@@ -1,4 +1,4 @@
-﻿using Magaz.Data;
+﻿using Magaz.DAL.Data;
 using Magaz.Models;
 using Magaz.Models.ViewModels;
 using Magaz.Utility;

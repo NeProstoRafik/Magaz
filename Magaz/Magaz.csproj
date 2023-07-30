@@ -23,4 +23,10 @@
     <Folder Include="wwwroot\templates\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Magaz.DAL\Magaz.DAL.csproj" />
+    <ProjectReference Include="..\Magaz.Models\Magaz.Models.csproj" />
+    <ProjectReference Include="..\Magaz.Utility\Magaz.Utility.csproj" />
+  </ItemGroup>
+
 </Project>

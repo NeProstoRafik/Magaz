@@ -1,9 +1,13 @@
-﻿using Magaz.Data;
+﻿using Magaz.DAL.Data;
 using Magaz.Models;
+using Magaz.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace Magaz.Controllers
 {
+    [Authorize(Roles = WC.AdminRole)]
     public class CategoryController : Controller
     {
         private Context _Db { get; set; }

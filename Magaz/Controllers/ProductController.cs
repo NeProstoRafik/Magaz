@@ -1,12 +1,15 @@
-﻿using Magaz.Data;
+﻿using Magaz.DAL.Data;
 using Magaz.Models;
 using Magaz.Models.ViewModels;
+using Magaz.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace Magaz.Controllers
 {
+    [Authorize(Roles =WC.AdminRole)]
     public class ProductController : Controller
     {
         private readonly Context _Db;
