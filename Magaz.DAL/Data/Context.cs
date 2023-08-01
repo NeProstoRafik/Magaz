@@ -11,7 +11,7 @@ namespace Magaz.DAL.Data
         public Context(DbContextOptions<Context> options) : base(options)
         {
      // Database.EnsureDeleted();
-           Database.EnsureCreated();
+         //  Database.EnsureCreated();
         }
         public DbSet<Category> Categories { get; set; }
         public DbSet<ApplicationType> Applications { get; set; }
