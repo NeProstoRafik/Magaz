@@ -1,4 +1,5 @@
 ﻿using Magaz.DAL.Data;
+using Magaz.DAL.Repository.IRepository;
 using Magaz.Models;
 using Magaz.Utility;
 using Microsoft.AspNetCore.Authorization;
@@ -11,14 +12,16 @@ namespace Magaz.Controllers
     public class ApplicationTypeController : Controller
     {
 
-        private Context _Db { get; set; }
-        public ApplicationTypeController(Context context)
+        private IApplicationTypeRepository _appRep { get; set; }
+       
+        public ApplicationTypeController(IApplicationTypeRepository appRep)
         {
-            _Db = context;
+            _appRep = appRep;
         }
+
         public IActionResult Index()
         {
-            IEnumerable<ApplicationType> app = _Db.Applications;
+            IEnumerable<ApplicationType> app = _appRep.GetAll();
             return View(app);
         }
         
@@ -31,8 +34,8 @@ namespace Magaz.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(ApplicationType obj)
         {
-            _Db.Applications.Add(obj);
-            _Db.SaveChanges();
+            _appRep.Add(obj);
+            _appRep.Save();
             return RedirectToAction("Index");
         }
         public IActionResult Edit(int? id)
@@ -41,7 +44,7 @@ namespace Magaz.Controllers
             {
                 return NotFound();
             }
-            var obj = _Db.Applications.FirstOrDefault(c => c.Id == id);
+            var obj = _appRep.FirstOrDefault(c => c.Id == id);
             if (obj == null)
             {
                 return NotFound();
@@ -54,8 +57,8 @@ namespace Magaz.Controllers
         {
             if (ModelState.IsValid)
             {
-                _Db.Applications.Update(application);
-                _Db.SaveChanges();
+                _appRep.Update(application);
+                _appRep.Save();
                 return RedirectToAction("Index");
             }
             return View(application);
@@ -64,13 +67,13 @@ namespace Magaz.Controllers
         
         public IActionResult Delete(int? id)
         {
-            var obj = _Db.Applications.FirstOrDefault(c => c.Id == id);
+            var obj = _appRep.FirstOrDefault(c => c.Id == id);
             if (obj == null)
             {
                 return NotFound();
             }
-            _Db.Applications.Remove(obj);
-            _Db.SaveChanges();
+            _appRep.Remove(obj);
+            _appRep.Save();
             return RedirectToAction("Index");
 
         }

@@ -1,4 +1,4 @@
-﻿using Magaz.DAL.Data;
+﻿using Magaz.DAL.Repository.IRepository;
 using Magaz.Models;
 using Magaz.Models.ViewModels;
 using Magaz.Utility;
@@ -9,20 +9,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Magaz.Controllers
 {
-    [Authorize(Roles =WC.AdminRole)]
+    [Authorize(Roles = WC.AdminRole)]
     public class ProductController : Controller
     {
-        private readonly Context _Db;
+        private readonly IProductRepository _Db;
         private readonly IWebHostEnvironment webHostEnvironment;
-        public ProductController(Context context, IWebHostEnvironment webHostEnvironment)
+        public ProductController(IProductRepository db, IWebHostEnvironment webHostEnvironment)
         {
-            _Db = context;
+            _Db = db;
             this.webHostEnvironment = webHostEnvironment;
         }
         public IActionResult Index()
         {
-            IEnumerable<Product> products = _Db.Products.Include(u=>u.Category).Include(u=>u.ApplicationType);
-
+            IEnumerable<Product> products = _Db.GetAll(includeProperties: "Category,ApplicationType");
             return View(products);
         }
         public IActionResult Upsert(int? id)
@@ -37,18 +36,12 @@ namespace Magaz.Controllers
             //Product product = new Product();
 
             ProductVM productVM = new ProductVM()
-            {Product = new Product(),
-            SelectListItems = _Db.Categories.Select(i => new SelectListItem
             {
-                Text = i.Name,
-                Value = i.Id.ToString(),
-            }),
-               ApplicationSelectList = _Db.Applications.Select(i => new SelectListItem
-               {
-                   Text = i.Name,
-                   Value = i.Id.ToString(),
-               })
+                Product = new Product(),
+                SelectListItems = _Db.GetAllDropDownList(WC.CategoryName),
+                ApplicationSelectList = _Db.GetAllDropDownList(WC.ApplicationTypeName),
             };
+
             if (id == null)
             {
                 // это для создания
@@ -56,7 +49,7 @@ namespace Magaz.Controllers
             }
             else
             {
-                productVM.Product = _Db.Products.Find(id);
+                productVM.Product = _Db.Find(id.GetValueOrDefault());
                 if (productVM.Product == null)
                 {
                     return NotFound();
@@ -66,7 +59,7 @@ namespace Magaz.Controllers
 
         }
         [HttpPost]
-     
+
         public IActionResult Upsert(ProductVM productVM)
         {
             //var errors = ModelState.Select(x => x.Value.Errors)
@@ -77,16 +70,16 @@ namespace Magaz.Controllers
                 var files = HttpContext.Request.Form.Files;
                 string webRootPath = webHostEnvironment.WebRootPath;
 
-                if (productVM.Product.Id==0)
+                if (productVM.Product.Id == 0)
                 {
                     //creating
                     //получаем путь до папки ввврут + путь до папки с картинками
                     string upload = webRootPath + WC.ImagePath;
-                    string fileName=Guid.NewGuid().ToString();
+                    string fileName = Guid.NewGuid().ToString();
                     string extention = Path.GetExtension(files[0].FileName);
 
                     //установим новый путь для файла
-                    using (var filestrim= new FileStream(Path.Combine(upload, fileName+extention), FileMode.Create))
+                    using (var filestrim = new FileStream(Path.Combine(upload, fileName + extention), FileMode.Create))
                     {
                         files[0].CopyTo(filestrim);
                     }
@@ -94,15 +87,15 @@ namespace Magaz.Controllers
                     //добавим новый путь к изображению
                     productVM.Product.Image = fileName + extention;
 
-                    _Db.Products.Add(productVM.Product);
-                  
+                    _Db.Add(productVM.Product);
+
                 }
                 else
                 {
                     //upload
                     // отключаем слежение для ЕФ
-                    var objFromDb = _Db.Products.AsNoTracking().FirstOrDefault(u => u.Id == productVM.Product.Id);
-                    if (files.Count>0)
+                    var objFromDb = _Db.FirstOrDefault(u => u.Id == productVM.Product.Id, isTracking: false);;
+                    if (files.Count > 0)
                     {
                         string upload = webRootPath + WC.ImagePath;
                         string fileName = Guid.NewGuid().ToString();
@@ -119,86 +112,86 @@ namespace Magaz.Controllers
                         {
                             files[0].CopyTo(filestrim);
                         }
-                        productVM.Product.Image= fileName + extention;
+                        productVM.Product.Image = fileName + extention;
                     }
                     else
                     {
                         productVM.Product.Image = objFromDb.Image;
 
                     }
-                    _Db.Products.Update(productVM.Product);
+                    _Db.Update(productVM.Product);
                 }
-                _Db.SaveChanges();
+                _Db.Save();
                 return RedirectToAction("Index");
             }
-            productVM.SelectListItems = _Db.Categories.Select(i => new SelectListItem
-            {
-                Text = i.Name,
-                Value = i.Id.ToString(),
-            });
-            productVM.ApplicationSelectList = _Db.Applications.Select(i => new SelectListItem
-            {
-                Text = i.Name,
-                Value = i.Id.ToString(),
-            });
+            productVM.SelectListItems = _Db.GetAllDropDownList(WC.CategoryName);
+             
+            productVM.ApplicationSelectList = _Db.GetAllDropDownList(WC.ApplicationTypeName);
 
 
             return View(productVM);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Category category)
-        {
-            if (ModelState.IsValid)
-            {
-                _Db.Categories.Add(category);
-                _Db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(category);
-        }
 
-        public IActionResult Edit(int? id)
-        {
-            if (id == null || id == 0)
-            {
-                return NotFound();
-            }
-            var obj = _Db.Categories.FirstOrDefault(c => c.Id == id);
-            if (obj == null)
-            {
-                return NotFound();
-            }
-            return View(obj);
-        }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Edit(Category category)
-        {
-            if (ModelState.IsValid)
-            {
-                _Db.Categories.Update(category);
-                _Db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(category);
-        }
-        
-       
+
+        // удалить
+
+
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult Create(Category category)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        _Db.Add(category);
+        //        _Db.Save();
+        //        return RedirectToAction("Index");
+        //    }
+        //    return View(category);
+        //}
+
+        //public IActionResult Edit(int? id)
+        //{
+        //    if (id == null || id == 0)
+        //    {
+        //        return NotFound();
+        //    }
+        //    var obj = _Db.Categories.FirstOrDefault(c => c.Id == id);
+        //    if (obj == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    return View(obj);
+        //}
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult Edit(Category category)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        _Db.Update(category);
+        //        _Db.Save();
+        //        return RedirectToAction("Index");
+        //    }
+        //    return View(category);
+        //}
+
+
         public IActionResult Delete([FromRoute] int? id)
         {
-            var obj = _Db.Products.Find(id);
 
-            //жадная загрузка
-          //  Product product = _Db.Products.Include(u=>u.Id==id).FirstOrDefault(u=>u.Id==id);
-           
+            var obj=_Db.Find(id.GetValueOrDefault());
+          //  var obj = _Db.FirstOrDefault(u => u.Id == id, includeProperties:"Category,ApplicationType") ;
+
+            //жадная загрузкаype
+            //  Product product = _Db.Products.Include(u=>u.Id==id).FirstOrDefault(u=>u.Id==id);
+
             if (obj == null)
             {
                 return NotFound();
             }
 
-            string upload = webHostEnvironment.WebRootPath + WC.ImagePath;           
+            string upload = webHostEnvironment.WebRootPath + WC.ImagePath;
 
             //обеденяет пути
             var oldFile = Path.Combine(upload, obj.Image);
@@ -208,9 +201,9 @@ namespace Magaz.Controllers
                 System.IO.File.Delete(oldFile);
             }
 
-            _Db.Products.Remove(obj);
-            _Db.SaveChanges();
-          return RedirectToAction("Index");
+            _Db.Remove(obj);
+            _Db.Save();
+            return RedirectToAction("Index");
 
         }
     }

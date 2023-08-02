@@ -1,4 +1,5 @@
 ﻿using Magaz.DAL.Data;
+using Magaz.DAL.Repository.IRepository;
 using Magaz.Models;
 using Magaz.Utility;
 using Microsoft.AspNetCore.Authorization;
@@ -10,14 +11,15 @@ namespace Magaz.Controllers
     [Authorize(Roles = WC.AdminRole)]
     public class CategoryController : Controller
     {
-        private Context _Db { get; set; }
-        public CategoryController(Context context)
+        private ICategoryRepository _catRepo { get; set; }
+        public CategoryController( ICategoryRepository catRepo)
         {
-            _Db = context;
+            
+            this._catRepo = catRepo;
         }
         public IActionResult Index()
         {
-            IEnumerable<Category> categories = _Db.Categories;
+            IEnumerable<Category> categories = _catRepo.GetAll();
             return View(categories);
         }
         public IActionResult Create()
@@ -31,8 +33,8 @@ namespace Magaz.Controllers
         {
             if (ModelState.IsValid)
             {
-                _Db.Categories.Add(category);
-                _Db.SaveChanges();
+                _catRepo.Add(category);
+                _catRepo.Save();
                 return RedirectToAction("Index");
             }
             return View(category);
@@ -44,7 +46,7 @@ namespace Magaz.Controllers
             {
                 return NotFound();
             }
-            var obj = _Db.Categories.FirstOrDefault(c => c.Id == id);
+            var obj = _catRepo.FirstOrDefault(c => c.Id == id);
             if (obj == null)
             {
                 return NotFound();
@@ -57,8 +59,8 @@ namespace Magaz.Controllers
         {
             if (ModelState.IsValid)
             {
-                _Db.Categories.Update(category);
-                _Db.SaveChanges();
+                _catRepo.Update(category);
+                _catRepo.Save();
                 return RedirectToAction("Index");
             }
             return View(category);
@@ -81,13 +83,13 @@ namespace Magaz.Controllers
       
         public IActionResult Delete( int? id)
         {
-            var obj = _Db.Categories.FirstOrDefault(c => c.Id == id);
+            var obj = _catRepo.FirstOrDefault(c => c.Id == id);
             if (obj == null)
             {
                 return NotFound();
             }
-            _Db.Categories.Remove(obj);
-            _Db.SaveChanges();
+            _catRepo.Remove(obj);
+            _catRepo.Save();
             return RedirectToAction("Index");
 
         }

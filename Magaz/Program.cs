@@ -1,4 +1,6 @@
 using Magaz.DAL.Data;
+using Magaz.DAL.Repository;
+using Magaz.DAL.Repository.IRepository;
 using Magaz.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -24,6 +26,10 @@ namespace Magaz
                 op.Cookie.HttpOnly = true;
                 op.Cookie.IsEssential = true;
             });
+
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<IApplicationTypeRepository, ApplicationTypeRepository>();
+            builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
