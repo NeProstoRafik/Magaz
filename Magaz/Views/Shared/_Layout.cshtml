@@ -60,12 +60,29 @@
                                 <li><hr class="dropdown-divider"></li>
                                 @if(User.IsInRole(WC.AdminRole))
                                 {
-                            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">Create admin</a>
+                            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">Inqutry</a>
 
                                 }
                 </div>
                             </div>
                         </li>
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Order Management
+                </a>
+
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" asp-area="" asp-controller="Inquiry" asp-action="Index">Inquiry</a>
+                    
+
+            </div>
+           
+            </li>
+
+
+
+
                         <li>
                             @if(HttpContextAccesor.HttpContext.Session.Get<List<ShopingCart>>(WC.SessionCart)!=null)
                             {
@@ -100,15 +117,15 @@
             &copy; 2023 - Magaz  
         </div>
     </footer>
-  @*  <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
    
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>*@
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+    @*<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
@@ -117,7 +134,7 @@
     <script src="https://cdn.syncfusion.com/ej2/dist/ej2.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
-
+*@
    
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -1,4 +1,5 @@
 ﻿using Magaz.DAL.Data;
+using Magaz.DAL.Repository.IRepository;
 using Magaz.Models;
 using Magaz.Models.ViewModels;
 using Magaz.Utility;
@@ -12,19 +13,22 @@ namespace Magaz.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly Context _db;
-        public HomeController(ILogger<HomeController> logger, Context db = null)
+        private readonly IProductRepository _prodRep;
+        private readonly ICategoryRepository _catRep;
+        public HomeController(ILogger<HomeController> logger, IProductRepository prodRep, ICategoryRepository catRep)
         {
             _logger = logger;
-            _db = db;
+         
+            _prodRep = prodRep;
+            _catRep = catRep;
         }
 
         public IActionResult Index()
         {
             HomeVM homeVM = new HomeVM()
             {
-                Products = _db.Products.Include(u => u.Category).Include(u => u.ApplicationType),
-                Categories = _db.Categories
+                Products = _prodRep.GetAll(includeProperties: "Category,ApplicationType"),
+                Categories = _catRep.GetAll()
             };
             return View(homeVM);
         }
@@ -39,7 +43,8 @@ namespace Magaz.Controllers
             }
             DetailsVM detailVM = new DetailsVM()
             {
-                Product = _db.Products.Include(u => u.Category).Include(u => u.ApplicationType).FirstOrDefault(u => u.Id == id),
+                //  Product = _db.Products.Include(u => u.Category).Include(u => u.ApplicationType).FirstOrDefault(u => u.Id == id),
+                Product = _prodRep.FirstOrDefault(u=>u.Id==id, includeProperties: "Category,ApplicationType"),
                 IsExist = false,
             };
             foreach(var item in shopingCartsList)

@@ -1,4 +1,5 @@
 ﻿using Magaz.DAL.Data;
+using Magaz.DAL.Repository.IRepository;
 using Magaz.Models;
 using Magaz.Models.ViewModels;
 using Magaz.Utility;
@@ -13,16 +14,24 @@ namespace Magaz.Controllers
     [Authorize]
     public class CartController : Controller
     {
-        private readonly Context _db;
+        private readonly IApplicationUserRepository _appUser;
+        private readonly IProductRepository _prodRep;
+        private readonly IInquiryDetailRepository _inquiryDetail;
+        private readonly IInquiryHeaderRepository _inquiryHeader;
+
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IEmailSender _emailSender;
         [BindProperty] // чтобы не узакзывать в методах
         public ProductUserVM ProductUserVM { get; set; }
-        public CartController(Context db, IWebHostEnvironment webHostEnvironment, IEmailSender emailSender)
+        public CartController(IWebHostEnvironment webHostEnvironment, IEmailSender emailSender, IApplicationUserRepository appUser, IProductRepository prodRep, IInquiryDetailRepository inquiryDetail, IInquiryHeaderRepository inquiryHeader)
         {
-            _db = db;
+
             _webHostEnvironment = webHostEnvironment;
             _emailSender = emailSender;
+            _appUser = appUser;
+            _prodRep = prodRep;
+            _inquiryDetail = inquiryDetail;
+            _inquiryHeader = inquiryHeader;
         }
 
         public IActionResult Index()
@@ -34,7 +43,7 @@ namespace Magaz.Controllers
                 shops= HttpContext.Session.Get<List<ShopingCart>>(WC.SessionCart);
             }
             List<int> prodIdCart=shops.Select(i=>i.ProductId).ToList();
-            IEnumerable<Product> prodList = _db.Products.Where(i => prodIdCart.Contains(i.Id));
+            IEnumerable<Product> prodList = _prodRep.GetAll(i => prodIdCart.Contains(i.Id));
             return View(prodList);
         }
         [HttpPost]
@@ -57,12 +66,12 @@ namespace Magaz.Controllers
                 shops = HttpContext.Session.Get<List<ShopingCart>>(WC.SessionCart);
             }
             List<int> prodIdCart = shops.Select(i => i.ProductId).ToList();
-            IEnumerable<Product> prodList = _db.Products.Where(i => prodIdCart.Contains(i.Id));
+            IEnumerable<Product> prodList = _prodRep.GetAll(i => prodIdCart.Contains(i.Id));
 
             ProductUserVM = new ProductUserVM()
             {
               // ApplicationUser = _db.ApplicationUsers.FirstOrDefault(u => u.UserName == userId),
-               ApplicationUser =_db.ApplicationUsers.FirstOrDefault(u=>u.Id==claim.Value),
+               ApplicationUser =_appUser.FirstOrDefault(u=>u.Id==claim.Value),
                     ProductList= prodList.ToList(),
                     
             };
@@ -76,6 +85,9 @@ namespace Magaz.Controllers
         [ActionName("Summary")]
         public async Task<IActionResult> SummaryPost(ProductUserVM productUserVM)
         {
+            var clamsIdentity = (ClaimsIdentity)User.Identity;
+            var claim = clamsIdentity.FindFirst(ClaimTypes.NameIdentifier); // получаем пользователя
+
             var pathToTeamplate= _webHostEnvironment.WebRootPath + Path.DirectorySeparatorChar.ToString()+
               "Templates" + Path.DirectorySeparatorChar.ToString() + "Inquiry.html";
             var subject = "New Inquiry";
@@ -98,6 +110,28 @@ namespace Magaz.Controllers
 
             await _emailSender.SendEmailAsync( WC.AdminEmail, subject, messageBody); // отправляем сообщение
 
+            //отправляем в БД заголовки из письма емейла
+            InquiryHeader inquiryHeader = new InquiryHeader()
+            {
+                ApllicationUserId = claim.Value,
+                Email=ProductUserVM.ApplicationUser.Email,
+                PhoneNumber=productUserVM.ApplicationUser.PhoneNumber,
+                InquiryDate=DateTime.Now,
+            };
+            _inquiryHeader.Add(inquiryHeader);
+            _inquiryHeader.Save();
+
+            foreach (var item in productUserVM.ProductList)
+            {
+                InquiryDetail inquiryDetail = new InquiryDetail()
+                {
+                    InquiryHederId = inquiryHeader.id,
+                    ProductId = item.Id
+                };
+                _inquiryDetail.Add(inquiryDetail);
+              
+            }
+            _inquiryDetail.Save();
             return RedirectToAction(nameof(InquiryConfirmation));
         }
         public IActionResult InquiryConfirmation()

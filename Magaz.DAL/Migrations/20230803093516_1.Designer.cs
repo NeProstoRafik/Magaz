@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Magaz.DAL.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20230731141037_test")]
-    partial class test
+    [Migration("20230803093516_1")]
+    partial class _1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -60,6 +60,63 @@ namespace Magaz.DAL.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("Magaz.Models.InquiryDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("InquiryHederId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InquiryHederId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("InquiryDetail");
+                });
+
+            modelBuilder.Entity("Magaz.Models.InquiryHeader", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<string>("ApllicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("InquiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("ApllicationUserId");
+
+                    b.ToTable("InquiryHeader");
                 });
 
             modelBuilder.Entity("Magaz.Models.Product", b =>
@@ -299,6 +356,36 @@ namespace Magaz.DAL.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Magaz.Models.InquiryDetail", b =>
+                {
+                    b.HasOne("Magaz.Models.InquiryHeader", "InquiryHeader")
+                        .WithMany()
+                        .HasForeignKey("InquiryHederId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Magaz.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InquiryHeader");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Magaz.Models.InquiryHeader", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "apllicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApllicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("apllicationUser");
                 });
 
             modelBuilder.Entity("Magaz.Models.Product", b =>

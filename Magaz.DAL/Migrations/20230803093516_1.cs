@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Magaz.DAL.Migrations
 {
     /// <inheritdoc />
-    public partial class test : Migration
+    public partial class _1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -184,6 +184,29 @@ namespace Magaz.DAL.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "InquiryHeader",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApllicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    InquiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InquiryHeader", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_InquiryHeader_AspNetUsers_ApllicationUserId",
+                        column: x => x.ApllicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Products",
                 columns: table => new
                 {
@@ -210,6 +233,32 @@ namespace Magaz.DAL.Migrations
                         name: "FK_Products_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "InquiryDetail",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    InquiryHederId = table.Column<int>(type: "int", nullable: false),
+                    ProductId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InquiryDetail", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_InquiryDetail_InquiryHeader_InquiryHederId",
+                        column: x => x.InquiryHederId,
+                        principalTable: "InquiryHeader",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_InquiryDetail_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -254,6 +303,21 @@ namespace Magaz.DAL.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_InquiryDetail_InquiryHederId",
+                table: "InquiryDetail",
+                column: "InquiryHederId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InquiryDetail_ProductId",
+                table: "InquiryDetail",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InquiryHeader_ApllicationUserId",
+                table: "InquiryHeader",
+                column: "ApllicationUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Products_ApplicationId",
                 table: "Products",
                 column: "ApplicationId");
@@ -283,10 +347,16 @@ namespace Magaz.DAL.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Products");
+                name: "InquiryDetail");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "InquiryHeader");
+
+            migrationBuilder.DropTable(
+                name: "Products");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
