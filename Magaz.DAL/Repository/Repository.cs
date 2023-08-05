@@ -83,7 +83,7 @@ namespace Magaz.DAL.Repository
 
         public void RemoveRange(IEnumerable<T> entity)
         {
-            throw new NotImplementedException();
+            _dbSet.RemoveRange(entity);
         }
 
         public void Save()

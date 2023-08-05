@@ -1,9 +1,13 @@
 ﻿using Magaz.DAL.Repository.IRepository;
+using Magaz.Models;
 using Magaz.Models.ViewModels;
+using Magaz.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Magaz.Controllers
 {
+    [Authorize(WC.AdminRole)]
     public class InquiryController : Controller
     {
         private readonly IInquiryDetailRepository _detailRep;
@@ -39,6 +43,36 @@ namespace Magaz.Controllers
             };
 
             return View(InquiryVM);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Details()
+        {
+          List<ShopingCart> shopingCartsList=new List<ShopingCart>();
+            InquiryVM.InquiryDetail=_detailRep.GetAll(u=>u.InquiryHederId==InquiryVM.InquiryHeader.id);
+            foreach (var item in InquiryVM.InquiryDetail)
+            {
+                ShopingCart shopingCart = new ShopingCart()
+                {
+                    ProductId = item.ProductId,
+                };
+                shopingCartsList.Add(shopingCart);
+            }
+            HttpContext.Session.Clear();
+            HttpContext.Session.Set(WC.SessionCart, shopingCartsList);
+            HttpContext.Session.Set(WC.SessionInquiryId, InquiryVM.InquiryHeader.id);
+            return RedirectToAction("Index", "Cart");
+        }
+        [HttpPost]
+        public IActionResult Delete()
+        {
+            InquiryHeader inquiryHeader = _headerRep.FirstOrDefault(u=>u.id==InquiryVM.InquiryHeader.id);
+            IEnumerable<InquiryDetail> inquiryDetails=_detailRep.GetAll(u=>u.InquiryHederId==InquiryVM.InquiryHeader.id);
+            _detailRep.RemoveRange(inquiryDetails);
+            _headerRep.Remove(inquiryHeader);
+            _headerRep.Save();
+            return RedirectToAction(nameof(Index));
+
         }
     }
 }
