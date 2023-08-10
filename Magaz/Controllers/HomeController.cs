@@ -57,7 +57,7 @@ namespace Magaz.Controllers
             return View(detailVM);
         }
         [HttpPost, ActionName("Details")]
-        public IActionResult DetailsPost (int id)
+        public IActionResult DetailsPost (int id, DetailsVM detailsVM)
         {
             List<ShopingCart> shopingCartsList= new List<ShopingCart>();
             if (HttpContext.Session.Get<IEnumerable<ShopingCart>>(WC.SessionCart)!=null 
@@ -65,7 +65,7 @@ namespace Magaz.Controllers
             {
                 shopingCartsList = HttpContext.Session.Get<List<ShopingCart>>(WC.SessionCart);
             }
-            shopingCartsList.Add(new ShopingCart { ProductId = id });
+            shopingCartsList.Add(new ShopingCart { ProductId = id, SqrtM = detailsVM.Product.SqrtM });
             HttpContext.Session.Set(WC.SessionCart, shopingCartsList);
 
             return RedirectToAction(nameof(Index));

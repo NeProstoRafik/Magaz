@@ -35,8 +35,10 @@ namespace Magaz.Controllers
             {
                 _catRepo.Add(category);
                 _catRepo.Save();
+                TempData[WC.Success] = "КАТЕГОРИЯ добавленна успешно";
                 return RedirectToAction("Index");
             }
+            TempData[WC.Error] = "КАТЕГОРИЯ не добавилась, ошибка";
             return View(category);
         }
 
@@ -90,6 +92,7 @@ namespace Magaz.Controllers
             }
             _catRepo.Remove(obj);
             _catRepo.Save();
+            TempData[WC.Success] = "КАТЕГОРИЯ удалена успешно";
             return RedirectToAction("Index");
 
         }

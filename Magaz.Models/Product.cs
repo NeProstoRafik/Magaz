@@ -5,6 +5,11 @@ namespace Magaz.Models
 {
     public class Product
     {
+        public Product()
+        {
+
+            SqrtM = 1;
+        }
         [Key] public int Id { get; set; }
         [Required]
         public string Name { get; set; }
@@ -22,5 +27,9 @@ namespace Magaz.Models
         public int ApplicationId { get; set; }
         [ForeignKey("ApplicationId")]
         public virtual ApplicationType? ApplicationType { get; set; }
+
+        [NotMapped] //не добавит в БД
+        [Range(1,1000)]
+        public int SqrtM { get; set; }
     }
 }

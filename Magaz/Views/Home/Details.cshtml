@@ -31,7 +31,25 @@
 
                                         <p class="text-secondary">@Html.Raw(Model.Product.Description)</p>
                                     </div>
+                                    @if (User.IsInRole(WC.AdminRole))
+                                    {
+                                        <div class="col-12">
+                                            M2:
+                                         </div>
+                                         <div class="col-12">
+                                             @if (Model.IsExist)
+                                            {
+                                                <input asp-for="@Model.Product.SqrtM" disabled class="form-control"/>
+                                            }
+                                            else
+                                            {
+                                                <input asp-for="@Model.Product.SqrtM" class="form-control" />
 
+                                            }
+                                            <span asp-validation-for="@Model.Product.SqrtM" class="text-danger"></span>
+                                        </div>
+
+                                    }
                                 </div>
                             </div>
                         </div>

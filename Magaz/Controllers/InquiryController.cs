@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Magaz.Controllers
 {
-    [Authorize(WC.AdminRole)]
+    [Authorize(Roles=WC.AdminRole)]
     public class InquiryController : Controller
     {
         private readonly IInquiryDetailRepository _detailRep;
