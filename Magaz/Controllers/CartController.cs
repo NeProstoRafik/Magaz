@@ -1,14 +1,17 @@
-﻿using Magaz.DAL.Data;
+﻿using Braintree;
+using Magaz.DAL.Data;
 using Magaz.DAL.Repository.IRepository;
 using Magaz.Models;
 using Magaz.Models.ViewModels;
 using Magaz.Utility;
+using Magaz.Utility.BrainTreeSettings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text;
+
 
 namespace Magaz.Controllers
 {
@@ -22,9 +25,15 @@ namespace Magaz.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IEmailSender _emailSender;
+
+        private readonly IOrderHeaderRepository _orderHRepo;
+        private readonly IOrderDetailRepository _orderDRepo;
+
+        private readonly IBrainTreeGate _brain;
+
         [BindProperty] // чтобы не узакзывать в методах
         public ProductUserVM ProductUserVM { get; set; }
-        public CartController(IWebHostEnvironment webHostEnvironment, IEmailSender emailSender, IApplicationUserRepository appUser, IProductRepository prodRep, IInquiryDetailRepository inquiryDetail, IInquiryHeaderRepository inquiryHeader)
+        public CartController(IWebHostEnvironment webHostEnvironment, IEmailSender emailSender, IApplicationUserRepository appUser, IProductRepository prodRep, IInquiryDetailRepository inquiryDetail, IInquiryHeaderRepository inquiryHeader, IOrderDetailRepository orderDRepo, IOrderHeaderRepository orderHRepo, IBrainTreeGate brain)
         {
 
             _webHostEnvironment = webHostEnvironment;
@@ -33,6 +42,9 @@ namespace Magaz.Controllers
             _prodRep = prodRep;
             _inquiryDetail = inquiryDetail;
             _inquiryHeader = inquiryHeader;
+            _orderDRepo = orderDRepo;
+            _orderHRepo = orderHRepo;
+            _brain = brain;
         }
 
         public IActionResult Index()
@@ -90,6 +102,9 @@ namespace Magaz.Controllers
                    // applicationUser = new ApplicationUser() { };
                     applicationUser = new IdentityUser() { };
                 }
+                var getway = _brain.GetGateway();
+                var clientToken = getway.ClientToken.Generate();
+                ViewBag.ClientToken = clientToken;
             }
             else
             {
@@ -130,11 +145,77 @@ namespace Magaz.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Summary")]
-        public async Task<IActionResult> SummaryPost(ProductUserVM productUserVM)
+        public async Task<IActionResult> SummaryPost(IFormCollection collection, ProductUserVM productUserVM)
         {
             var clamsIdentity = (ClaimsIdentity)User.Identity;
             var claim = clamsIdentity.FindFirst(ClaimTypes.NameIdentifier); // получаем пользователя
 
+            if (User.IsInRole(WC.AdminRole))
+            {
+                //создаем заказ
+                OrderHeader orderHeader = new OrderHeader()
+                {
+                    CreatedByUserId = claim.Value,
+                    FinalOrderTotal = ProductUserVM.ProductList.Sum(x => x.SqrtM * x.Price),
+                    
+                    StreetAddress = ProductUserVM.ApplicationUser.PhoneNumber,
+                    
+                    Email = ProductUserVM.ApplicationUser.Email,
+                    PhoneNumber = ProductUserVM.ApplicationUser.PhoneNumber,
+                    OrderDate = DateTime.Now,
+                    OrderStatus = WC.StatusPending
+                };
+                _orderHRepo.Add(orderHeader);
+                _orderHRepo.Save();
+
+                foreach (var prod in ProductUserVM.ProductList)
+                {
+                    OrderDetail orderDetail = new OrderDetail()
+                    {
+                        OrderHeaderId = orderHeader.Id,
+                        PricePerSqFt = prod.Price,
+                        Sqft = prod.SqrtM,
+                        ProductId = prod.Id
+                    };
+                    _orderDRepo.Add(orderDetail);
+
+                }
+                _orderDRepo.Save();
+
+                //braintree настройки с сайта
+                string nonceFromTheClient = collection["payment_method_nonce"];
+
+                var request = new TransactionRequest
+                {
+                    Amount = Convert.ToDecimal(orderHeader.FinalOrderTotal),
+                    PaymentMethodNonce = nonceFromTheClient,
+                    OrderId = orderHeader.Id.ToString(),
+                    Options = new TransactionOptionsRequest
+                    {
+                        SubmitForSettlement = true
+                    }
+                };
+
+                var gateway = _brain.GetGateway();
+                Result<Transaction> result = gateway.Transaction.Sale(request);
+
+                if (result.Target.ProcessorResponseText == "Approved")
+                {
+                    orderHeader.TransactionId = result.Target.Id;
+                    orderHeader.OrderStatus = WC.StatusApproved;
+                }
+                else
+                {
+                    orderHeader.OrderStatus = WC.StatusCancelled;
+                }
+                _orderHRepo.Save();
+                return RedirectToAction(nameof(InquiryConfirmation), new { id = orderHeader.Id });
+
+            }
+            else
+            {
+
+            
             var pathToTeamplate= _webHostEnvironment.WebRootPath + Path.DirectorySeparatorChar.ToString()+
               "Templates" + Path.DirectorySeparatorChar.ToString() + "Inquiry.html";
             var subject = "New Inquiry";
@@ -178,7 +259,9 @@ namespace Magaz.Controllers
                 _inquiryDetail.Add(inquiryDetail);
               
             }
-            _inquiryDetail.Save();
+                _inquiryDetail.Save();
+            }
+           
             return RedirectToAction(nameof(InquiryConfirmation));
         }
         public IActionResult InquiryConfirmation()
@@ -211,6 +294,14 @@ namespace Magaz.Controllers
             }
             HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
             return RedirectToAction(nameof(Index));
+        }
+        public IActionResult Clear()
+        {
+
+            HttpContext.Session.Clear();
+
+
+            return RedirectToAction("Index", "Home");
         }
     }
 }

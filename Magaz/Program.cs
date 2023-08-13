@@ -1,12 +1,16 @@
 using Magaz.DAL.Data;
 using Magaz.DAL.Repository;
 using Magaz.DAL.Repository.IRepository;
+using Magaz.Models;
 using Magaz.Utility;
+using Magaz.Utility.BrainTreeSettings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Magaz.DAL.Repository;
 using System.Text;
+
 
 namespace Magaz
 {
@@ -27,12 +31,17 @@ namespace Magaz
                 op.Cookie.IsEssential = true;
             });
 
+            builder.Services.Configure<BrainTreeSettings>(builder.Configuration.GetSection("BrainTree")); // чтобы брать настройки из апсетинга
+            builder.Services.AddScoped<IBrainTreeGate, BrainTreeGate>();
+
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<IApplicationTypeRepository, ApplicationTypeRepository>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IInquiryHeaderRepository, InquiryHeaderRepository>();
             builder.Services.AddScoped<IInquiryDetailRepository, InquiryDetailRepository>();
             builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
+            builder.Services.AddScoped<IOrderHeaderRepository, OrderHeaderRepository>();
+            builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 

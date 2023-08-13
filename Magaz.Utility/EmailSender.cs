@@ -9,7 +9,7 @@ namespace Magaz.Utility
 {
     public class EmailSender : IEmailSender
     {
-        private readonly IConfiguration _configuration; // для получения из ДИ
+        private readonly IConfiguration _configuration; // для получения из ДИ и из апссетингс, вметсо чтобы юзать в стартапе
 
        public MailJetSettings _mailJetSettings { get; set; }
 
@@ -25,7 +25,7 @@ namespace Magaz.Utility
 
         public async Task Execute(string email, string subject, string body)
         {
-            // получаем значения из апсетинг джейсон из поля маилджет
+            // получаем значения из апсетинг джейсон из поля маилджет 
            _mailJetSettings = _configuration.GetSection("MailJet").Get<MailJetSettings>(); 
 
             MailjetClient client = new MailjetClient(_mailJetSettings.ApiKey, _mailJetSettings.SecretKey)

@@ -20,5 +20,7 @@ namespace Magaz.DAL.Data
         public DbSet<IdentityUser> ApplicationUsers { get; set; }
         public DbSet<InquiryHeader> InquiryHeader { get; set; }
         public DbSet<InquiryDetail> InquiryDetail { get; set; }
+        public DbSet<OrderHeader> OrderHeaders { get; set; }
+        public DbSet<OrderDetail> OrderDetails { get; set; }
     }
 }
