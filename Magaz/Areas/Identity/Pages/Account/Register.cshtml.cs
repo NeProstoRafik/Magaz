@@ -114,6 +114,7 @@ namespace Magaz.Areas.Identity.Pages.Account
                 await _roleManager.CreateAsync(new IdentityRole(WC.CustomerRole));
             }
             ReturnUrl = returnUrl;
+           
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
@@ -203,6 +204,7 @@ namespace Magaz.Areas.Identity.Pages.Account
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
+          
             return (IUserEmailStore<IdentityUser>)_userStore;
         }
     }

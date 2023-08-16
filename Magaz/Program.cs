@@ -10,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Magaz.DAL.Repository;
 using System.Text;
-
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.OAuth;
 
 namespace Magaz
 {
@@ -20,7 +22,7 @@ namespace Magaz
         {
             
             var builder = WebApplication.CreateBuilder(args);
-
+            
             builder.Services.AddTransient<IEmailSender, EmailSender>();
             //для сессии
             builder.Services.AddHttpContextAccessor();
@@ -42,6 +44,37 @@ namespace Magaz
             builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
             builder.Services.AddScoped<IOrderHeaderRepository, OrderHeaderRepository>();
             builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+
+            builder.Services.AddAuthentication().AddFacebook(Options =>
+              {
+                  Options.AppId = "979166549209276";
+                  Options.AppSecret = "0136648c5c6de648ac4d61b2d6534281";
+              })
+                
+                  .AddOAuth("VK", "Vkontakte", config =>
+                  {
+                      config.ClientId = "51727918";
+                      config.ClientSecret = "XAjVPPWzISaTDNvtnGAh";
+                      config.ClaimsIssuer = "VKontakte";
+                       config.CallbackPath = new PathString("/signin-vkontakte-token");
+                    //  config.CallbackPath = new PathString("/Home");
+                      config.AuthorizationEndpoint = "https://oauth.vk.com/authorize";
+                      config.TokenEndpoint = "https://oauth.vk.com/access_token";
+                   //  config.Scope.Add("email");
+                     config.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "user_id");
+                     config.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+
+                     config.SaveTokens = true;
+                      config.Events = new OAuthEvents
+                      {
+                          OnCreatingTicket = context =>
+                          {
+                              context.RunClaimActions(context.TokenResponse.Response.RootElement);
+                              return Task.CompletedTask;
+                          },
+                      
+                      };
+                  });
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
@@ -73,6 +106,7 @@ namespace Magaz
             app.UseAuthorization();
             app.UseSession(); // мидлваря сессии
                              
+
             //app.MapControllerRoute(
 
             //    name: "default",
@@ -87,5 +121,7 @@ namespace Magaz
             });
             app.Run();
         }
-}
+      
+
+    }
 }

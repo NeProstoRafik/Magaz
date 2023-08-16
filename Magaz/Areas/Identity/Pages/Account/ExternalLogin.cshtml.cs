@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32.SafeHandles;
 
 namespace Magaz.Areas.Identity.Pages.Account
 {
@@ -29,7 +30,7 @@ namespace Magaz.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
-
+   
         public ExternalLoginModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
@@ -43,6 +44,7 @@ namespace Magaz.Areas.Identity.Pages.Account
             _emailStore = GetEmailStore();
             _logger = logger;
             _emailSender = emailSender;
+            Hz();
         }
 
         /// <summary>
@@ -85,9 +87,13 @@ namespace Magaz.Areas.Identity.Pages.Account
             [EmailAddress]
             public string Email { get; set; }
         }
-        
-        public IActionResult OnGet() => RedirectToPage("./Login");
-
+        public async Task Hz()
+        {
+            var info =await _signInManager.GetExternalLoginInfoAsync();
+            
+        }
+     
+            public IActionResult OnGet() => RedirectToPage("./Home");
         public IActionResult OnPost(string provider, string returnUrl = null)
         {
             // Request a redirect to the external login provider.
@@ -213,6 +219,7 @@ namespace Magaz.Areas.Identity.Pages.Account
 
         private IUserEmailStore<IdentityUser> GetEmailStore()
         {
+
             if (!_userManager.SupportsUserEmail)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
